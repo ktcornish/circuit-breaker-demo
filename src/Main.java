@@ -8,7 +8,7 @@ import java.util.TimerTask;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Timer t = new Timer();
         t.schedule(new TimerTask() {
             @Override
@@ -19,10 +19,10 @@ public class Main {
                     e.printStackTrace();
                 }
             }
-        }, 0, 5000);
+        }, 0, 2000);
     }
 
-public static void newRequest() throws IOException {
+private static void newRequest() throws IOException {
     URL helloServer = new URL("http://localhost:5050/jedd");
     URLConnection helloConnection = helloServer.openConnection();
     BufferedReader in = new BufferedReader(
