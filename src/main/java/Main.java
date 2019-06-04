@@ -11,50 +11,66 @@ import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.Connection;
 import java.time.Duration;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        CircuitBreaker breaker = new CircuitBreaker()
-                .withFailureThreshold(3, 10)
-                .withSuccessThreshold(5);
+        RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
+                .handle(ConnectException.class)
+                .withDelay(Duration.ofSeconds(1))
+                .withMaxRetries(3);
 
+        CircuitBreaker<Object> breaker = new CircuitBreaker<>()
+                .handle(ConnectException.class)
+                .withFailureThreshold(3)
+                .withSuccessThreshold(3)
+                .withDelay(Duration.ofSeconds(10))
+                .onClose(() -> System.out.println("The circuit breaker was closed"))
+                .onOpen(() -> System.out.println("The circuit breaker was opened"))
+                .onHalfOpen(() -> System.out.println("The circuit breaker was half opened"));
 
+        Fallback<Object> fallback = Fallback.of((CheckedConsumer<ExecutionAttemptedEvent<?>>) failure -> { throw new Exception(); });
 
-        Failsafe.with(breaker).run(() -> startRequests());
+        Request request = new Request();
+
+        Failsafe.with(fallback, retryPolicy, breaker).run(request);
 
     }
 
-    private static void startRequests() {
-        Timer t = new Timer();
-        t.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    newRequest();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, 0, 2000);
-    }
 
-private static void newRequest() throws IOException {
-    URL helloServer = new URL("http://localhost:5050/jedd");
-    URLConnection helloConnection = helloServer.openConnection();
-    BufferedReader in = new BufferedReader(
-            new InputStreamReader(
-                    helloConnection.getInputStream()));
-    String inputLine;
 
-    while ((inputLine = in.readLine()) != null)
-        System.out.println(inputLine);
-    in.close();
-    }
+//    private static void startRequests() {
+//        Timer t = new Timer();
+//        t.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                try {
+//                    newRequest();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }, 0, 2000);
+//    }
+
+//private static void newRequest() throws Exception {
+//    URL helloServer = new URL("http://localhost:5050/jedd");
+//    URLConnection helloConnection = helloServer.openConnection();
+//    BufferedReader in = new BufferedReader(
+//            new InputStreamReader(
+//                    helloConnection.getInputStream()));
+//    String inputLine;
+//
+//    while ((inputLine = in.readLine()) != null)
+//        System.out.println(inputLine);
+//    in.close();
+//    }
 }
 
