@@ -1,60 +1,67 @@
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.Fallback;
 import net.jodah.failsafe.RetryPolicy;
-import net.jodah.failsafe.event.ExecutionAttemptedEvent;
-import net.jodah.failsafe.function.CheckedConsumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.ConnectException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.time.Duration;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
 
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
     public static void main(String[] args) {
 
-        CircuitBreaker breaker = new CircuitBreaker()
-                .withFailureThreshold(3, 10)
-                .withSuccessThreshold(5);
+        RetryPolicy<Object> retryPolicy = new RetryPolicy<>()
+                .withBackoff(1L, 10L, ChronoUnit.SECONDS)
+                .onRetriesExceeded(eae -> logger.debug("Retries exceeded {}", eae))
+                .onFailedAttempt(eae -> logger.debug("Failed attempt {}", eae))
+                .onRetry(eae -> logger.debug("Retry {}", eae))
+                .withMaxRetries(10);
 
+        CircuitBreaker<Object> circuitBreaker = new CircuitBreaker<>()
+                .withFailureThreshold(3)
+                .withSuccessThreshold(3)
+                .withDelay(Duration.ofSeconds(5))
+                .onClose(() -> logger.debug("Closed"))
+                .onOpen(() -> logger.debug("Open"))
+                .onHalfOpen(() -> logger.debug("Half Open"));
 
-
-        Failsafe.with(breaker).run(() -> startRequests());
+        Failsafe
+                .with(retryPolicy, circuitBreaker)
+                .run(Main::startRequests);
 
     }
 
-    private static void startRequests() {
-        Timer t = new Timer();
-        t.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    newRequest();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+    private static void startRequests() throws IOException {
+        while (true) {
+            newRequest();
+            try {
+                TimeUnit.SECONDS.sleep(1);
             }
-        }, 0, 2000);
-    }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+}
 
 private static void newRequest() throws IOException {
-    URL helloServer = new URL("http://localhost:5050/jedd");
-    URLConnection helloConnection = helloServer.openConnection();
-    BufferedReader in = new BufferedReader(
-            new InputStreamReader(
-                    helloConnection.getInputStream()));
-    String inputLine;
+    URL helloServer = new URL("http://localhost:5050/");
 
-    while ((inputLine = in.readLine()) != null)
-        System.out.println(inputLine);
-    in.close();
+    try (InputStreamReader isr = new InputStreamReader(helloServer.openConnection().getInputStream());
+         BufferedReader br = new BufferedReader(isr)) {
+
+        String inputLine;
+        while ((inputLine = br.readLine()) != null)
+            logger.debug(inputLine);
+        }
     }
+
 }
 
