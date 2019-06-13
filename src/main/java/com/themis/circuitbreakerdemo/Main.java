@@ -1,3 +1,5 @@
+package com.themis.circuitbreakerdemo;
+
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -10,9 +12,10 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class Main {
+public class Main extends TimerTask {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
@@ -40,27 +43,32 @@ public class Main {
     }
 
     private static void startRequests() throws IOException {
-        while (true) {
+        TimerTask tasknew = new Main();
+        Timer timer = new Timer();
+
+        timer.scheduleAtFixedRate(tasknew, 0, 1000);
+
+    }
+
+    @Override
+    public void run() {
+        try {
             newRequest();
-            try {
-                TimeUnit.SECONDS.sleep(1);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        } catch (IOException e){
+            e.printStackTrace();
         }
-}
+    }
 
-private static void newRequest() throws IOException {
-    URL helloServer = new URL("http://localhost:5050/");
+    private static void newRequest() throws IOException {
+        URL helloServer = new URL("http://localhost:5050/");
 
-    try (InputStreamReader isr = new InputStreamReader(helloServer.openConnection().getInputStream());
-         BufferedReader br = new BufferedReader(isr)) {
+        try (InputStreamReader isr = new InputStreamReader(helloServer.openConnection().getInputStream());
+             BufferedReader br = new BufferedReader(isr)) {
 
-        String inputLine;
-        while ((inputLine = br.readLine()) != null)
-            logger.debug(inputLine);
-        }
+                String inputLine;
+                while ((inputLine = br.readLine()) != null)
+                    logger.debug(inputLine);
+             }
     }
 
 }
