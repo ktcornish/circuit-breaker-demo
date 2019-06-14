@@ -1,5 +1,10 @@
 package com.themis.circuitbreakerdemo;
 
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.javanet.NetHttpTransport;
 import net.jodah.failsafe.CircuitBreaker;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -7,15 +12,12 @@ import net.jodah.failsafe.function.CheckedRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.stream.Stream;
 
 public class Main extends TimerTask {
 
@@ -57,15 +59,18 @@ public class Main extends TimerTask {
                 .run(checkedRunnable);
     }
 
-    private static void newRequest() throws IOException {
+    public static HttpResponse newRequest() throws IOException {
+
         URL helloServer = new URL("http://localhost:5050/");
 
-        InputStreamReader isr = new InputStreamReader(helloServer.openConnection().getInputStream());
-        BufferedReader br = new BufferedReader(isr);
+        HttpRequestFactory requestFactory = new NetHttpTransport().createRequestFactory();
+        HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(helloServer));
 
-        Stream<String> inputLine = br.lines();
-        inputLine.forEach(s -> logger.debug(s));
+        HttpResponse rawResponse = request.execute();
+        String responseString = rawResponse.parseAsString();
 
+        logger.debug(responseString);
+        return rawResponse;
     }
 
 }
