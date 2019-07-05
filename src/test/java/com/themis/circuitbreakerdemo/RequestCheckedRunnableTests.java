@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import ratpack.server.RatpackServer;
 
 
+import java.io.IOException;
+
 import static org.junit.Assert.*;
 
 public class RequestCheckedRunnableTests {
@@ -29,19 +31,14 @@ public class RequestCheckedRunnableTests {
     }
 
     @Test
-    public void check200s() {
+    public void check200s() throws Exception {
         logger.debug("Running in 200s");
         String url = "http://localhost:5050/";
 
-        try {
             RequestCheckedRunnable rcr = new RequestCheckedRunnable(url);
             rcr.run();
 
             int count200s = rcr.get200s();
             assertEquals(1, count200s);
-
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
     }
 }
