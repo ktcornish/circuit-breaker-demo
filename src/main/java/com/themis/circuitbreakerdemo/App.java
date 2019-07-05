@@ -2,7 +2,6 @@ package com.themis.circuitbreakerdemo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -14,10 +13,9 @@ public class App implements Runnable {
     public static void main(String[] args) {
 
         try {
-            Config config = new Config();
             String url = "http://localhost:5050/";
             RequestCheckedRunnable checkedRunnable = new RequestCheckedRunnable(url);
-            RequestTimerTask timerTask = new RequestTimerTask(config, checkedRunnable);
+            RequestTimerTask timerTask = new RequestTimerTask(checkedRunnable);
             App app = new App(timerTask);
             app.run();
         } catch (IOException e) {

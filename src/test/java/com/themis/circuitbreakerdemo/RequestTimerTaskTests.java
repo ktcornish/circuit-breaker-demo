@@ -9,9 +9,8 @@ public class RequestTimerTaskTests {
 
     @Test
     public void test() {
-        Config config = new Config();
         Counter runnableCounter = new Counter();
-        RequestTimerTask requestTimerTask = new RequestTimerTask(config, runnableCounter);
+        RequestTimerTask requestTimerTask = new RequestTimerTask(runnableCounter);
         requestTimerTask.run();
         assertEquals(1, runnableCounter.count);
     }

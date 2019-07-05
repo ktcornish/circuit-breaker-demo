@@ -19,19 +19,19 @@ public final class RequestTimerTask extends TimerTask {
     private final CheckedRunnable checkedRunnable;
 
 
-    RequestTimerTask(Config config, CheckedRunnable checkedRunnable) {
+    RequestTimerTask(CheckedRunnable checkedRunnable) {
 
         this.retryPolicy = new RetryPolicy<>()
-                .withBackoff(config.getRetryPolicyBackoffDelay(), config.getRetryPolicyBackoffMaxDelay(), ChronoUnit.SECONDS)
+                .withBackoff(Config.RETRY_POLICY_BACKOFF_DELAY, Config.RETRY_POLICY_BACKOFF_MAX_DELAY, ChronoUnit.SECONDS)
                 .onRetriesExceeded(eae -> logger.debug("Retries exceeded {}", eae))
                 .onFailedAttempt(eae -> logger.debug("Failed attempt {}", eae))
                 .onRetry(eae -> logger.debug("Retry {}", eae))
-                .withMaxRetries(config.getRetryPolicyMaxRetries());
+                .withMaxRetries(Config.RETRY_POLICY_MAX_RETRIES);
 
         this.circuitBreaker = new CircuitBreaker<>()
-                .withFailureThreshold(config.getCircuitBreakerFailureThreshold())
-                .withSuccessThreshold(config.getCircuitBreakerSuccessThreshold())
-                .withDelay(Duration.ofSeconds(config.getCircuitBreakerDelayDuration()))
+                .withFailureThreshold(Config.CIRCUIT_BREAKER_FAILURE_THRESHOLD)
+                .withSuccessThreshold(Config.CIRCUIT_BREAKER_SUCCESS_THRESHOLD)
+                .withDelay(Duration.ofSeconds(Config.CIRCUIT_BREAKER_DELAY_DURATION))
                 .onClose(() -> logger.debug("Closed"))
                 .onOpen(() -> logger.debug("Open"))
                 .onHalfOpen(() -> logger.debug("Half Open"));

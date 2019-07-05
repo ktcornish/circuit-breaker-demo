@@ -2,38 +2,11 @@ package com.themis.circuitbreakerdemo;
 
 public class Config {
 
-    private int retryPolicyBackoffDelay = 1;
-    private int retryPolicyBackoffMaxDelay = 10;
-    private int retryPolicyMaxRetries = 10;
-    private int circuitBreakerFailureThreshold = 3;
-    private int circuitBreakerSuccessThreshold = 3;
-    private int circuitBreakerDelayDuration = 5;
+    public static final int RETRY_POLICY_BACKOFF_DELAY = 1;
+    public static final int RETRY_POLICY_BACKOFF_MAX_DELAY = 10;
+    public static final int RETRY_POLICY_MAX_RETRIES = 10;
+    public static final int CIRCUIT_BREAKER_FAILURE_THRESHOLD = 3;
+    public static final int CIRCUIT_BREAKER_SUCCESS_THRESHOLD = 3;
+    public static final int CIRCUIT_BREAKER_DELAY_DURATION = 5;
 
-    public Config() {
-    }
-
-    public int getRetryPolicyBackoffMaxDelay() {
-        return retryPolicyBackoffMaxDelay;
-    }
-
-    public int getRetryPolicyMaxRetries() {
-        return retryPolicyMaxRetries;
-    }
-
-    public int getCircuitBreakerFailureThreshold() {
-        return circuitBreakerFailureThreshold;
-    }
-
-    public int getCircuitBreakerSuccessThreshold() {
-        return circuitBreakerSuccessThreshold;
-    }
-
-    public int getCircuitBreakerDelayDuration() {
-        return circuitBreakerDelayDuration;
-    }
-
-    public int getRetryPolicyBackoffDelay() {
-        return retryPolicyBackoffDelay;
-
-    }
 }
